@@ -24,12 +24,12 @@ boolean moves[][][][];
 PFont font;
 
 void setup() {
-  size(800, 600, P3D);
+  size(800, 600, OPENGL);
   frameRate(25);
   
   font = loadFont("TrebuchetMS-Italic-20.vlw");
   textFont(font);
-  textMode(SCREEN);
+  textMode(SHAPE);
   
   println(Serial.list());
   serial = new Serial(this, Serial.list()[serialPort], 115200);
@@ -51,6 +51,7 @@ void draw() {
 void updateSerial() {
   String cur = serial.readStringUntil('\n');
   if(cur != null) {
+    //println(cur);
     String[] parts = split(cur, " ");
     if(parts.length == sen  ) {
       float[] xyz = new float[sen];
@@ -100,8 +101,12 @@ void drawBoard() {
     0, 1, 0);
 
   pushMatrix();
-  noStroke();
-  fill(0, 40);
+  
+  // Due to a currently unresolved issue with Processing 2.0.3 and OpenGL depth sorting,
+  // we can't fill the large box without hiding the rest of the boxes in the scene.
+  // We'll use a stroke for this one instead.
+  noFill();
+  stroke(0, 40);
   translate(w/2, w/2, w/2);
   rotateY(-HALF_PI/2);
   box(w);
@@ -117,7 +122,7 @@ void drawBoard() {
     axyz[0].avg * sd,
     axyz[1].avg * sd,
     axyz[2].avg * sd);
-  fill(255, 160, 0);
+  fill(255, 160, 0, 200);
   noStroke();
   sphere(18);
   popMatrix();
@@ -130,19 +135,19 @@ void drawBoard() {
 
         noStroke();
         if(moves[0][x][y][z])
-          fill(255, 0, 0, 200);
+          fill(255, 0, 0, 200); // transparent red
         else if(moves[1][x][y][z])
-          fill(0, 0, 255, 200);
+          fill(0, 0, 255, 200); // transparent blue
         else if(
         x == ixyz[0] &&
           y == ixyz[1] &&
           z == ixyz[2])
           if(player == 0)
-            fill(255, 0, 0, 200);
+            fill(255, 0, 0, 200); // transparent red
           else
-            fill(0, 0, 255, 200);
+            fill(0, 0, 255, 200); // transparent blue
         else
-          fill(0, 100);
+          fill(0, 100); // transparent grey
         box(sw / 3);
 
         popMatrix();
@@ -150,7 +155,7 @@ void drawBoard() {
     }
   }
   
-  fill(0);
+  stroke(0);
   if(mousePressed && mouseButton == LEFT)
     msg("defining boundaries");
 }
@@ -177,5 +182,7 @@ void reset() {
 }
 
 void msg(String msg) {
-  text(msg, 10, height - 10);
+  //using 'text(msg, 10, height - 10)' results in an exception being thrown in Processing 2.0.3 on OSX
+  //we're going to use the console to output instead.
+  println(msg);
 }
